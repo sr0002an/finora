@@ -9,3 +9,9 @@ class Transaction(SQLModel, table=True):
     type: str  # "income" or "expense"
     category: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class TransactionCreate(SQLModel):
+    title: str
+    amount: float
+    type: str  # "income" or "expense"
+    category: str
