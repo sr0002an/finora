@@ -1,14 +1,23 @@
-from fastapi import FastAPI
+from fastapi import FastAPI # type: ignore
 from sqlmodel import SQLModel, create_engine, Session, select
 from models import Transaction, TransactionCreate
 from typing import List
-from fastapi import Path, HTTPException, Body
+from fastapi import Path, HTTPException # type: ignore
+from fastapi.middleware.cors import CORSMiddleware # type: ignore
 
 import csv
 import io
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse # type: ignore
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 #  Database config
