@@ -1,6 +1,6 @@
 from fastapi import FastAPI # type: ignore
 from sqlmodel import SQLModel, create_engine, Session, select
-from models import Transaction, TransactionCreate
+from models import Transaction, TransactionCreate, Budget
 from typing import List
 from fastapi import Path, HTTPException # type: ignore
 from fastapi.middleware.cors import CORSMiddleware # type: ignore
@@ -97,3 +97,20 @@ def export_transactions():
             media_type="text/csv",
             headers={"Content-Disposition": "attachment; filename=transactions.csv"}
         )
+    
+@app.post("/budget")
+def save_budget(budget: Budget):
+    with Session(engine) as session:
+        session.add(budget)
+        session.commit()
+        session.refresh(budget)
+        return budget
+    
+@app.get("/budget", response_model=Budget)
+def get_latest_budget():
+    with Session(engine) as session:
+        result = session.exec(select(Budget).order_by(Budget.id.desc())).first()
+        if result:
+            return result
+        else:
+            raise HTTPException(status_code=404, detail="No budget found")

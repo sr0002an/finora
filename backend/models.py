@@ -15,3 +15,10 @@ class TransactionCreate(SQLModel):
     amount: float
     type: str  # "income" or "expense"
     category: str
+
+class Budget(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    income: float
+    needs: float
+    wants: float
+    savings: float
