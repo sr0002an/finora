@@ -9,12 +9,14 @@ class Transaction(SQLModel, table=True):
     type: str  # "income" or "expense"
     category: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    image_url: Optional[str] = None
 
 class TransactionCreate(SQLModel):
     title: str
     amount: float
     type: str  # "income" or "expense"
     category: str
+    image_url: Optional[str] = None
 
 class Budget(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

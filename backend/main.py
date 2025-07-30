@@ -1,9 +1,10 @@
-from fastapi import FastAPI # type: ignore
+from fastapi import FastAPI, File, Form, UploadFile # type: ignore
 from sqlmodel import SQLModel, create_engine, Session, select
 from models import Transaction, TransactionCreate, Budget
 from typing import List
 from fastapi import Path, HTTPException # type: ignore
 from fastapi.middleware.cors import CORSMiddleware # type: ignore
+from fastapi.staticfiles import StaticFiles
 
 import csv
 import io
@@ -35,8 +36,29 @@ def read_root():
     return {"message": "Welcome to Finora backend 🚀"}
 
 @app.post("/transactions", response_model=Transaction)
-def create_transaction(transaction_data: TransactionCreate):
-    new_transaction = Transaction(**transaction_data.model_dump())  #converts to full model
+async def create_transaction(
+    title: str = Form(...),
+    amount: float = Form(...),
+    type: str = Form(...),
+    category: str = Form(...),
+    image: UploadFile = File(None)
+):
+    import os
+    image_url = None
+    if image:
+        os.makedirs("./static/receipts", exist_ok=True)
+        image_filename = f"receipts/{image.filename}"
+        with open(f"./static/{image_filename}", "wb") as buffer:
+            buffer.write(await image.read())
+        image_url = image_filename
+
+    new_transaction = Transaction(
+        title=title,
+        amount=amount,
+        type=type,
+        category=category,
+        image_url=image_url
+    )
     with Session(engine) as session:
         session.add(new_transaction)
         session.commit()
@@ -114,3 +136,5 @@ def get_latest_budget():
             return result
         else:
             raise HTTPException(status_code=404, detail="No budget found")
+
+app.mount("/static", StaticFiles(directory="static"), name="static")

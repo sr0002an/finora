@@ -47,3 +47,41 @@
 .read-the-docs {
   color: #888;
 }
+
+.summary {
+  background: rgba(255, 255, 255, 0.8); /* subtle glass effect */
+  padding: 1rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  margin-bottom: 1rem;
+}
+
+.summary p {
+  font-size: 1rem;
+  margin: 0.5rem 0;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.summary p:hover {
+  color: #0077ff;
+}
+
+.summary ul {
+  list-style: none;
+  padding-left: 1.5rem;
+  margin-top: 0.3rem;
+}
+
+.summary li {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.summary strong {
+  color: #222;
+}
+
+.transaction-list {
+  margin-top: 1rem;
+}
