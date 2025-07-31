@@ -1,0 +1,82 @@
+/* src/components/SummaryCard.css */
+.summary-card {
+    width: 100%;
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    animation: fadeInUp 0.5s ease-out both;
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+  }
+  
+  .summary-card:hover {
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+    transform: translateY(-4px);
+  }
+  
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .summary-stats {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 1.5rem;
+  }
+
+  .budget-info {
+    margin-top: 1.5rem;
+    text-align: center;
+    font-size: 1rem;
+    color: #333;
+  }
+  
+  .budget-info h4 {
+    margin-bottom: 0.5rem;
+  }
+  
+  .stat {
+    background: #f8f9fb;
+    border-radius: 16px;
+    padding: 1rem;
+    width: 30%;
+    box-shadow: inset 3px 3px 6px #d1d9e6, inset -3px -3px 6px #ffffff;
+  }
+  
+  .stat h3 {
+    font-size: 1rem;
+    margin-bottom: 0.3rem;
+  }
+  
+  .stat p {
+    font-size: 1.3rem;
+    font-weight: 600;
+  }
+  
+  .income p {
+    color: #38b000;
+  }
+  
+  .expense p {
+    color: #d00000;
+  }
+  
+  .balance p {
+    color: #333;
+  }
+  
+  .chart-placeholder {
+    font-style: italic;
+    font-size: 0.95rem;
+    color: #555;
+    margin-top: 1rem;
+  }

@@ -1,14 +1,16 @@
-from fastapi import FastAPI, File, Form, UploadFile # type: ignore
+from fastapi import FastAPI, File, Form, UploadFile  # type: ignore
 from sqlmodel import SQLModel, create_engine, Session, select
 from models import Transaction, TransactionCreate, Budget
 from typing import List
-from fastapi import Path, HTTPException # type: ignore
-from fastapi.middleware.cors import CORSMiddleware # type: ignore
+from fastapi import Path, HTTPException  # type: ignore
+from fastapi.middleware.cors import CORSMiddleware  # type: ignore
 from fastapi.staticfiles import StaticFiles
-
+from datetime import datetime, timedelta
+import random
+from database import SessionLocal
 import csv
 import io
-from fastapi.responses import StreamingResponse # type: ignore
+from fastapi.responses import StreamingResponse  # type: ignore
 
 app = FastAPI()
 
@@ -20,8 +22,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-#  Database config
+# Database config
 sqlite_file_name = "database.db"
 sqlite_url = f"sqlite:///{sqlite_file_name}"
 engine = create_engine(sqlite_url, echo=True)
@@ -64,13 +65,13 @@ async def create_transaction(
         session.commit()
         session.refresh(new_transaction)
         return new_transaction
-    
+
 @app.get("/transactions", response_model=List[Transaction])
 def get_transactions():
     with Session(engine) as session:
         transactions = session.query(Transaction).all()
         return transactions
-    
+
 @app.delete("/transactions/{transaction_id}")
 def delete_transaction(transaction_id: int = Path(..., gt=0)):
     with Session(engine) as session:
@@ -80,7 +81,7 @@ def delete_transaction(transaction_id: int = Path(..., gt=0)):
         session.delete(transaction)
         session.commit()
         return {"message": f"Transaction {transaction_id} deleted successfully"}
-    
+
 @app.put("/transactions/{transaction_id}", response_model=Transaction)
 def update_transaction(transaction_id: int, updated_data: TransactionCreate):
     with Session(engine) as session:
@@ -96,7 +97,7 @@ def update_transaction(transaction_id: int, updated_data: TransactionCreate):
         session.commit()
         session.refresh(db_transaction)
         return db_transaction
-    
+
 @app.get("/export")
 def export_transactions():
     with Session(engine) as session:
@@ -104,22 +105,18 @@ def export_transactions():
 
         output = io.StringIO()
         writer = csv.writer(output)
-        
-        # Write header row
         writer.writerow(["id", "title", "amount", "type", "category", "created_at"])
 
-        # Write each transaction as a row
         for t in transactions:
             writer.writerow([t.id, t.title, t.amount, t.type, t.category, t.created_at])
 
-        output.seek(0)  # Go back to the start of the in-memory file
-
+        output.seek(0)
         return StreamingResponse(
             output,
             media_type="text/csv",
             headers={"Content-Disposition": "attachment; filename=transactions.csv"}
         )
-    
+
 @app.post("/budget")
 def save_budget(budget: Budget):
     with Session(engine) as session:
@@ -127,7 +124,7 @@ def save_budget(budget: Budget):
         session.commit()
         session.refresh(budget)
         return budget
-    
+
 @app.get("/budget", response_model=Budget)
 def get_latest_budget():
     with Session(engine) as session:
@@ -137,4 +134,48 @@ def get_latest_budget():
         else:
             raise HTTPException(status_code=404, detail="No budget found")
 
+@app.post("/populate")
+def populate_fake_data():
+    db = SessionLocal()
+
+    # 🧼 Optional: wipe old data
+    db.query(Transaction).delete()
+    db.query(Budget).delete()
+    db.commit()
+
+    # ✅ Add 3 income entries spaced over 3 months
+    for i in range(3):
+        db.add(Transaction(
+            title=f"Salary Month {i+1}",
+            type='income',
+            category='Salary',
+            amount=3000 + i * 500,
+            created_at=datetime.now() - timedelta(days=30 * i)
+        ))
+
+    # ✅ Add 30 fake expense entries
+    categories = ['Food', 'Transport', 'Subscriptions', 'Shopping', 'Bills', 'Entertainment']
+    for i in range(30):
+        db.add(Transaction(
+            title=f"Expense {i+1}",
+            type='expense',
+            category=random.choice(categories),
+            amount=random.randint(20, 150),
+            created_at=datetime.now() - timedelta(days=random.randint(1, 60))
+        ))
+
+    # ✅ Add a sample budget (with income filled in!)
+    db.add(Budget(
+        income=5000,
+        needs=2500,
+        wants=1500,
+        savings=1000
+    ))
+
+    db.commit()
+    db.close()
+
+    return {"message": "Fake data populated!"}
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
