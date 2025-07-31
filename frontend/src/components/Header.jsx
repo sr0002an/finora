@@ -1,9 +1,9 @@
 function Header() {
   return (
-    <header className="header">
+    <div>
       <h1>Finora 💰</h1>
       <p>Your smart money tracker</p>
-    </header>
+    </div>
   );
 }
 
