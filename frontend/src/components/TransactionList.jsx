@@ -9,14 +9,34 @@ function TransactionList({ refreshTrigger }) {
   });
   const [expandedBucket, setExpandedBucket] = useState(null); // NEW: track expanded section
   const [expandedCategory, setExpandedCategory] = useState(null); // NEW: track expanded category
+  const [filterType, setFilterType] = useState("all");
+  const [selectedMonth, setSelectedMonth] = useState("all");
+  const [availableMonths, setAvailableMonths] = useState([]);
 
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
         const response = await fetch("http://127.0.0.1:8000/transactions");
         const data = await response.json();
-        setTransactions(data);
-        const summary = groupSpendingByBucket(data);
+        const monthList = Array.from(
+          new Set(data
+            .filter(tx => tx.created_at)
+            .map(tx => new Date(tx.created_at).toLocaleString('default', { month: 'long', year: 'numeric' }))
+          )
+        );
+        setAvailableMonths(monthList);
+
+        let filtered = filterType === "all" ? data : data.filter(tx => tx.type === filterType);
+
+        if (selectedMonth !== "all") {
+          filtered = filtered.filter(tx => {
+            const txMonth = new Date(tx.created_at).toLocaleString('default', { month: 'long', year: 'numeric' });
+            return txMonth === selectedMonth;
+          });
+        }
+
+        setTransactions(filtered);
+        const summary = groupSpendingByBucket(filtered);
         setSpendingSummary(summary);
         console.log("\ud83d\udcb8 Spending by bucket:", summary);
       } catch (error) {
@@ -25,7 +45,7 @@ function TransactionList({ refreshTrigger }) {
     };
 
     fetchTransactions();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, filterType, selectedMonth]);
 
   const groupSpendingByBucket = (transactions) => {
     const categoryMap = {
@@ -81,6 +101,33 @@ function TransactionList({ refreshTrigger }) {
   return (
     <div className="card">
       <h2>Transaction History</h2>
+
+      <div style={{ marginBottom: "1rem" }}>
+        <label htmlFor="typeFilter" style={{ marginRight: "0.5rem" }}>Filter by type:</label>
+        <select
+          id="typeFilter"
+          value={filterType}
+          onChange={(e) => setFilterType(e.target.value)}
+        >
+          <option value="all">All</option>
+          <option value="income">Income</option>
+          <option value="expense">Expense</option>
+        </select>
+      </div>
+
+      <div style={{ marginBottom: "1rem" }}>
+        <label htmlFor="monthFilter" style={{ marginRight: "0.5rem" }}>Filter by month:</label>
+        <select
+          id="monthFilter"
+          value={selectedMonth}
+          onChange={(e) => setSelectedMonth(e.target.value)}
+        >
+          <option value="all">All</option>
+          {availableMonths.map((month) => (
+            <option key={month} value={month}>{month}</option>
+          ))}
+        </select>
+      </div>
 
       <div className="summary" style={{ marginBottom: "1.5rem" }}>
         {Object.entries(spendingSummary).map(([bucket, total]) => (
